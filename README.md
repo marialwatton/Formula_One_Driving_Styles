@@ -1,4 +1,4 @@
-# Knapsack Problem Solver with Google OR-Tools
+# Formula 1 Driving Style vs Performance
 
 ## Executive Summary
 
@@ -69,13 +69,22 @@ Finally, a couple of columns were adjusted to be numeric values:
 
 `complete_df['positions_gained'] =  complete_df['grid_position'] - complete_df['race_finish_numeric']`
 
-### Adding Additional Metrics
+### Grouping and adding Additional Metrics
 
-The next step was to aggregate all the data until there was one row per driver_id 
+The next step was to aggregate all the data until there was one row per driver_id:
 
 ![Screenshot: Aggregating Data to one row per driver_id](screenshots//screenshot_1.png)
 
-### Standardizing Weight Units
+Following this, additional columns could be added which used the aggregated data from the previous step to create percentage performance for each driver on the following metrics:
+
+- **podium_finish_perc** - Podium_count/races_participated
+- **oiints_finish_perc** - points_finish_count/races_participated
+- **finish_rate** - races_finished/races_participated
+- **win_rate** - win_count/races_participated
+
+![Screenshot: Additional Columns added](screenshots//screenshot_3.png)
+
+### Removing Drivers
 
 To standardize the weight units across the dataset, we extracted and converted the weight values to kilograms. 
 This involved handling different units such as 'pounds' and 'ounces' by applying a conversion function.
@@ -83,22 +92,6 @@ This involved handling different units such as 'pounds' and 'ounces' by applying
 ![Screenshot: Weight Conversion](screenshots/01_initial_exploration/screenshot5.png)
 
 There was one row which contained '.' instead of a numeric value, this row was dropped 
-
-![Screenshot: Weight Conversion Errors](screenshots/01_initial_exploration/screenshot6.png)
-
-### Handling Price Values
-
-![Screenshot: Price Conversion](screenshots/01_initial_exploration/screenshot7.png)
-
-We also cleaned and standardized the price values, removing non-numeric characters, currency symbols and errors from the scraped data.
-
-![Screenshot: Price Conversion Errors](screenshots/01_initial_exploration/screenshot8.png)
-
-### Column Removal
-
-![Screenshot: Removing Columns](screenshots/01_initial_exploration/screenshot9.png)
-
-The original 'price' and 'weight' columns were removed from the dataset, as they were replaced with the standardized 'price' and 'weight_kg' columns.
 
 ### Final Dataset
 

@@ -86,34 +86,64 @@ Following this, additional columns could be added which used the aggregated data
 
 ### Removing Drivers
 
-To standardize the weight units across the dataset, we extracted and converted the weight values to kilograms. 
-This involved handling different units such as 'pounds' and 'ounces' by applying a conversion function.
+To avoid issues where drivers had only participated in a few races and would show a 100% finish rate or a 100% points finish, any driver who participated in less than 30 races was removed:  
 
-![Screenshot: Weight Conversion](screenshots/01_initial_exploration/screenshot5.png)
-
-There was one row which contained '.' instead of a numeric value, this row was dropped 
+```python
+driver_summary_df = driver_summary_df[driver_summary_df['races_participated'] > 30]
+```
 
 ### Final Dataset
 
-![Screenshot: Final Dataset](screenshots/01_initial_exploration/screenshot10.png)
+![Screenshot: Final Dataset](screenshots/screenshot_4.png)
 
-The resulting cleaned and standardized dataset was saved for future use, and it contains 'id', 'weight_kg', and 'price' columns.
+The resulting cleaned and standardized dataset could then be used for future processing, and contains the following columns: 
 
-## Solving the Knapsack Problem
+- **driver_id**
+- **driverRef**
+- **forename**
+- **surname**
+- **races_participated**
+- **years_participated**
+- **podium_count**
+- **points_finish_count**
+- **win_count**
+- **DNG_count**
+- **races_finished**
+- **avg_grid_position**
+- **avg_finihs_position**
+- **avg_positions_gained**
+- **podium_finish_perc**
+- **points_finish_perc**
+- **finish_rate**
+- **win_perc**
 
-In this section, we walk through the steps of solving the Knapsack Problem using Google OR-Tools with the cleaned and standardized dataset. The Knapsack Problem involves selecting items to maximize value while staying within capacity constraints, which is a valuable optimization technique for retail organizations.
+## Start the K Means Clustering Process
+
+In this section, we walk through the steps of using K Means Clustering to group drivers into different driving styles. This involved selecting the number of clusters to use and visualising this data.
 
 ### Loading the Cleaned Dataset
 
-We begin by loading the previously cleaned and standardized dataset, which includes 'id', 'weight_kg' and 'price' columns. 
-This dataset is now ready for solving the Knapsack Problem.
+This step prepares the data for clustering by selecting relevant features and separating them from the driver names.
 
-![Screenshot: Loading the Cleaned Dataset](screenshots/02_knapsack_problem/screenshot1.png)
+***driver_names = driver_summary_df['surname']***: This line extracts the 'surname' column from the driver_summary_df DataFrame and stores it in a new variable called driver_names. This is done to keep the driver names separate from the numerical features used for clustering.
 
-### Random Sampling for Reproducibility
+***driver_features_df = driver_summary_df[['dnf_rate','points_finish_perc','podium_finish_perc', 'avg_positions_gained', 'avg_finish_position', 'avg_grid_position','years_participated','races_participated', 'wins_per_season']]***: This line creates a new DataFrame called driver_features_df by selecting specific columns from the driver_summary_df. These selected columns represent the features that will be used as input for the K-Means clustering algorithm.
 
-For reproducibility, we set a random seed and shuffle the dataset. We then select a random subset of items to solve the Knapsack Problem.
+***display(driver_features_df.head())***: This line displays the first five rows of the newly created driver_features_df DataFrame. This allows the user to preview the data that will be used for clustering and ensure that the correct columns have been selected.
 
+![Screenshot: Loading the Cleaned Dataset](screenshots/screenshot_5.png)
+
+### Removing Missing Values and Scaling the Data
+
+This code snippet handles potential missing values and scales the numerical features in the data, which are crucial steps before applying clustering algorithms.
+
+***print("Missing values before handling:") and print(driver_features_df.isnull().sum())***: These lines check for and print the number of missing values in each column of the driver_features_df DataFrame before any handling is done.This gives you an initial assessment of the data's completeness.
+
+This then creates a new DataFrame called *driver_features_df_cleaned* by removing any rows from the original *driver_features_df* that contain at least one missing value. This is a simple method for handling NaNs, and it's often used before clustering because many clustering algorithms are sensitive to missing data.
+
+The code then is scaling numeric features so that they're on the same scale, which is especially useful for machine learning algorithms that are sensitive to differences in magnitude between features. This puts all features on equal footing, so no single feature unfairly dominates the clustering. Without this scaling, clusters might look elongated along the axis with larger values.
+
+After scaling, all features contribute equally to determining cluster membership, leading to more meaningful and balanced clusters. The DNF Rate has to be inverted before being scaled so that the lower rates are the higher scores otherwise it impacts the results.
 ```python
 random_seed = 42
 random.seed(random_seed)
@@ -123,7 +153,7 @@ shuffled_df = df.sample(frac=1, random_state=random_seed)
 num_samples = 100
 random_subset = shuffled_df.head(num_samples)
 ```
-![Screenshot: Sampled Subset](screenshots/02_knapsack_problem/screenshot2.png)
+![Screenshot: Cleaned and Scaled DataSet](screenshots/screenshot_6.png)
 
 ### Knapsack Problem Solver
 

@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This project explores the relationship between Formula One driving style and performance from the last 50 years. This is based on K Means Clustering of the driver’s performance and grouped drivers into one of six clusters:
+This project explores the relationship between Formula One driving style and performance in the last 50 years. This is based on K Means Clustering of the driver’s performance and grouped drivers into one of six clusters:
 
 - **Elite Drivers**
 - **Back-Markers**
@@ -281,49 +281,22 @@ display(driver_summary_df[stats_cols].sort_values('Cluster'))
 
 ### Results and Analysis
 
-We present the output, and verify the results by summing the total price and weight. 
-In this step, we encounter a discrepancy in the total weight, which prompts further investigation.
+This code snippet generates a PCA (Principal Component Analysis) loadings plot, which helps you understand how the original features contribute to the principal components to understand which features are most influential in shaping the results.
 
-![Screenshot: Results and Analysis](screenshots/02_knapsack_problem/screenshot3.png)
+Taking the square root helps scale the contributions properly so they reflect the actual influence.This gives you a final score for how much each feature contributes to PC1 and PC2. These can now be plotted on a graph.
 
-![Screenshot: Results and Analysis Discrepancy](screenshots/02_knapsack_problem/screenshot4.png)
+Features which are far from the origing 0.0 have a strong influence on the results and if two features are close toether they behave simlarily
 
-### Addressing Discrepancy
+![Screenshot: Understanding Features of F1 Driver Performance](screenshots/screenshot_12.png)
 
-We address the discrepancy by converting the 'kg' weight column into grams. 
-After performing the conversion and re-sampling, we solve the Knapsack Problem again.
+![Screenshot: F1 Driver Clusters Charting](screenshots/screenshot_13.png)
 
-```python
-def convert_grams(weight_kg):
-    weight_grams = math.ceil(weight_kg * 1000)
+## Recommendations
 
-    try:
-        return int(weight_grams)
-    except ValueError:
-        return None
+1. **Repeat with different features :** A lot of the clusters overlap one another which suggests the features are not ideal for seperating the groups and may benefit from iterating the process of picking different features so that better defined clusters can be identified.
 
-df['weight_grams'] = df['weight_kg'].apply(convert_grams)
-```
+![Screenshot: Overlapping Clusters](screenshots/screenshot_11.png)
 
-### Reanalysis of Results
-
-We reanalyze the results with the converted weight in grams, including the total weight in kilograms and grams.
-The discrepancy still exists, but the solver does get the total weight below the target of 25,000 grams or 25kg
-
-![Screenshot: Reanalysis of Results](screenshots/02_knapsack_problem/screenshot5.png)
-
-![Screenshot: Reanalysis of Results](screenshots/02_knapsack_problem/screenshot6.png)
-
-## Recommendations for Future Iterations
-
-1. **Multiple Knapsacks:** Future iterations of this project could expand from solving a single knapsack problem to solving multiple knapsacks simultaneously. This would be valuable for scenarios where there are multiple constraints or resources to consider.
-
-2. **Complex Packing Problems:** Consider tackling more complex packing problems, such as 2D or 3D bin packing, which have practical applications in logistics, manufacturing, and resource allocation.
-
-## Challenges Encountered
-
-One challenge encountered during the project was dealing with floating-point arithmetic limitations, which can affect the precision of calculations when working with values like weights and prices.
-While the discrepancy is small enough for this project, it's essential to be aware of such limitations in real-world applications.
 
 ## References
 

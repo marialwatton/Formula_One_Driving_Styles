@@ -57,7 +57,7 @@ display(final_merged_df.head())
 
 To focus on the relevant columns for create groups of Formula 1 Drivers, the following columns were selected:
 
-`selected_columns_df = final_merged_df[['raceId', 'year', 'date', 'name', 'driverId', 'driverRef','code','surname','forename','nationality','qualifyId','position_y','resultId','position_x','positionText','statusId','status','points']]`
+`selected_columns_df = final_merged_df[['raceId', 'year', 'date', 'name', 'driverId', 'driverRef', 'code', 'surname', 'forename', 'nationality', 'qualifyId', 'position_y', 'resultId', 'position_x', 'positionText', 'statusId', 'status', 'points']]`
 
 These columns were  then renamed as follows to improve clarity and consistencty of the data: 
 

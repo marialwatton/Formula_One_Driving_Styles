@@ -13,7 +13,7 @@ This project explores the relationship between Formula One driving style and per
   
 ## Data Selection
 
-The dataset **Formula 1 World Championship (1950 - 2024)** used for the project, sourced from Kaggle, included 14 CSV files however this project only utilised 5 of these. ["Formula 1 World Championships (1950-2024)"](https://www.kaggle.com/datasets/rohanrao/formula-1-world-championship-1950-2020). 
+The dataset **Formula 1 World Championship (1950 - 2024)** used for the project, sourced from Kaggle, included 14 CSV files however this project only utilised 5 of these. [Formula 1 World Championships (1950-2024)](https://www.kaggle.com/datasets/rohanrao/formula-1-world-championship-1950-2020). 
 
 - ***drivers*** - 9 columns, 862 rows.
 - ***qualifying*** - 9 columns, 10,494 rows.
@@ -53,16 +53,20 @@ print("Merged dataframes:")
 display(final_merged_df.head())
 ```
 
-### Data Selection and Renaming
+### Data Selection, Renaming and Formatting
 
 To focus on the relevant columns for create groups of Formula 1 Drivers, the following columns were selected:
 
-`bin_dataset = df[['Uniq Id','Shipping Weight','Selling Price']]`
+`selected_columns_df = final_merged_df[['raceId', 'year', 'date', 'name', 'driverId', 'driverRef','code','surname','forename','nationality','qualifyId','position_y','resultId','position_x','positionText','statusId','status','points']]`
 
-These columns were then renamed as 'id', 'weight' and 'price' for clarity and consistency.
-`bin_dataset = bin_dataset.rename(columns={'Uniq Id':'id','Shipping Weight':'weight','Selling Price':'price'})`
+These columns were  then renamed as follows to improve clarity and consistencty of the data: 
 
-![Screenshot: Renamed Columns](screenshots/01_initial_exploration/screenshot2.png)
+`complete_df = selected_columns_df.rename(columns={'name': 'race_name','code': 'driver_code','position_y': 'grid_position','position_x': 'race_finish','positionText': 'race_finish_text'})`
+
+Finally, a couple of columns were adjusted to be numeric values:
+
+`complete_df['race_finish_numeric'] = pd.to_numeric(complete_df['race_finish'], errors='coerce')`
+`complete_df['positions_gained'] =  complete_df['grid_position'] - complete_df['race_finish_numeric']`
 
 ### Handling Missing Values
 

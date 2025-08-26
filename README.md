@@ -69,15 +69,11 @@ Finally, a couple of columns were adjusted to be numeric values:
 
 `complete_df['positions_gained'] =  complete_df['grid_position'] - complete_df['race_finish_numeric']`
 
-### Handling Missing Values
+### Adding Additional Metrics
 
-Rows containing missing values in the 'weight' and 'price' columns were dropped from the dataset to ensure data integrity and accuracy in subsequent calculations.
+The next step was to aggregate all the data until there was one row per driver_id 
 
-![Screenshot: Rows with Missing Values](screenshots/01_initial_exploration/screenshot3.png)
-
-`bin_dataset.dropna(subset=['weight', 'price'],inplace=True)`
-
-![Screenshot: Dropping Rows with Missing Values](screenshots/01_initial_exploration/screenshot4.png)
+![Screenshot: Aggregating Data to one row per driver_id](screenshots/01_initial_exploration/screenshot4.png)
 
 ### Standardizing Weight Units
 

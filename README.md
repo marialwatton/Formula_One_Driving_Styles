@@ -13,7 +13,9 @@ This project explores the relationship between Formula One driving style and per
   
 ## Data Selection
 
-The dataset **Formula 1 World Championship (1950 - 2024)** used for the project, sourced from Kaggle, included 14 CSV files however this project only utilised 5 of these. [Formula 1 World Championships (1950-2024)](https://www.kaggle.com/datasets/rohanrao/formula-1-world-championship-1950-2020). 
+The dataset **Formula 1 World Championship (1950 - 2024)** used for the project, sourced from Kaggle, included 14 CSV files however this project only utilised 5 of these. 
+
+[Formula 1 World Championships (1950-2024)](https://www.kaggle.com/datasets/rohanrao/formula-1-world-championship-1950-2020). 
 
 - ***drivers*** - 9 columns, 862 rows.
 - ***qualifying*** - 9 columns, 10,494 rows.
@@ -78,7 +80,7 @@ The next step was to aggregate all the data until there was one row per driver_i
 Following this, additional columns could be added which used the aggregated data from the previous step to create percentage performance for each driver on the following metrics:
 
 - **podium_finish_perc** - Podium_count/races_participated
-- **oiints_finish_perc** - points_finish_count/races_participated
+- **points_finish_perc** - points_finish_count/races_participated
 - **finish_rate** - races_finished/races_participated
 - **win_rate** - win_count/races_participated
 
@@ -107,7 +109,7 @@ The resulting cleaned and standardized dataset could then be used for future pro
 - **podium_count**
 - **points_finish_count**
 - **win_count**
-- **DNG_count**
+- **DNF_count**
 - **races_finished**
 - **avg_grid_position**
 - **avg_finihs_position**
@@ -139,36 +141,71 @@ This code snippet handles potential missing values and scales the numerical feat
 
 ***print("Missing values before handling:") and print(driver_features_df.isnull().sum())***: These lines check for and print the number of missing values in each column of the driver_features_df DataFrame before any handling is done.This gives you an initial assessment of the data's completeness.
 
-This then creates a new DataFrame called *driver_features_df_cleaned* by removing any rows from the original *driver_features_df* that contain at least one missing value. This is a simple method for handling NaNs, and it's often used before clustering because many clustering algorithms are sensitive to missing data.
+This then creates a new DataFrame called ***driver_features_df_cleaned*** by removing any rows from the original ***driver_features_df*** that contain at least one missing value. This is a simple method for handling NaNs, and it's often used before clustering because many clustering algorithms are sensitive to missing data.
 
 The code then is scaling numeric features so that they're on the same scale, which is especially useful for machine learning algorithms that are sensitive to differences in magnitude between features. This puts all features on equal footing, so no single feature unfairly dominates the clustering. Without this scaling, clusters might look elongated along the axis with larger values.
 
 After scaling, all features contribute equally to determining cluster membership, leading to more meaningful and balanced clusters. The DNF Rate has to be inverted before being scaled so that the lower rates are the higher scores otherwise it impacts the results.
-```python
-random_seed = 42
-random.seed(random_seed)
 
-shuffled_df = df.sample(frac=1, random_state=random_seed)
-
-num_samples = 100
-random_subset = shuffled_df.head(num_samples)
-```
 ![Screenshot: Cleaned and Scaled DataSet](screenshots/screenshot_6.png)
 
-### Knapsack Problem Solver
+### Elbow Method
 
-We initialize the Knapsack Solver with the desired solver type and set the capacity of the knapsack (maximum weight allowed). 
-This solver type is suitable for multidimensional problems.
+The next step is to us thee Elbow Method to help determine the optimal number of clusters (k). The elbow method is a way to help decide the optimal number of clusters k in K-Means clustering. To figure this out we create a range of integers from 1 to 10 (inclusive), which represents the different values of k (number of clusters) that will be tested.
+
+For each of these you check how tightly the points are grouped (WCSS score). It's a way to measure how close the points in a cluster are to their cluster's center (centroid - the average position of all points in that cluster). Square those distances (this punishes points that are far away more heavily). These are then added up and that's the sum of the squares for the cluser. Once you do this for all points - this makes the WCSS.
+
+Low WCSS → points are close together → clusters are compact. High WCSS → points are spread out → clusters are loose. As you add more clusters, the points get tighter — but after a certain point, adding more clusters doesn't help much - this makes the bend therefore looking like an elbow. The bend is usually the best number of clusters to choose.
 
 ```python
-solver = knapsack_solver.KnapsackSolver(
-    knapsack_solver.SolverType.KNAPSACK_MULTIDIMENSION_BRANCH_AND_BOUND_SOLVER,
-    "KnapsackExample",
-)
+wcss = []
+k_range = range(1, 11)
 
-# Capacity of the knapsack (maximum weight allowed)
-capacity = 25000
+for k in k_range:
+    kmeans = KMeans(n_clusters=k, random_state=42, n_init=10)
+    kmeans.fit(scaled_features_df)
+    wcss.append(kmeans.inertia_)
+
+# Plot the Elbow Method
+plt.figure(figsize=(12, 5))
+plt.subplot(1, 2, 1)
+plt.plot(k_range, wcss, marker='o')
+plt.xlabel('Number of clusters (k)')
+plt.ylabel('WCSS')
+plt.title('Elbow Method for Optimal k')
+plt.xticks(k_range)
+plt.grid(True)
 ```
+
+![Screenshot: Elbow Method](screenshots/screenshot_7.png)
+
+### Elbow Method
+
+The silhouette method is another way to decide the best number of clusters in K-Means, but instead of just measuring “tightness” like WCSS, it also checks how well-separated the clusters are. Separation is about how far a cluster is from other clusters.For a specific point, we look at the nearest neighboring cluster and see how far away it is on average. If that other cluster is far from it's nearest other cluster, then it is well seperated and the boundary is clear. If that other cluster is close to another cluster then they might overlap or be poorly defined. This means silhouette is often better at catching situations where clusters are tight but still too close together. To find the best k value with the highest average silhouette score is usually the best. In real data, you might see a plateau or two close peaks
+
+```python
+wcss = []
+silhouette_scores = []
+k_range = range(1, 11)
+
+for k in k_range:
+    kmeans = KMeans(n_clusters=k, random_state=42, n_init=10)
+    kmeans.fit(scaled_features_df)
+    wcss.append(kmeans.inertia_)
+    if k > 1:
+        silhouette_scores.append(silhouette_score(scaled_features_df, kmeans.labels_))
+
+# Plot the Silhouette Scores
+plt.subplot(1, 2, 2)
+plt.plot(k_range[1:], silhouette_scores, marker='o')
+plt.xlabel('Number of clusters (k)')
+plt.ylabel('Silhouette Score')
+plt.title('Silhouette Scores for Optimal k')
+plt.xticks(k_range[1:])
+plt.grid(True)
+```
+
+![Screenshot: Silhoutte Method](screenshots/screenshot_8.png)
 
 ### Preparing Data for the Solver
 

@@ -51,6 +51,7 @@ final_merged_df = pd.merge(merged_results_races, qualifying_df, on=['raceId', 'd
 
 print("Merged dataframes:")
 display(final_merged_df.head())
+```
 
 ### Data Selection and Renaming
 

@@ -25,7 +25,7 @@ The dataset **Formula 1 World Championship (1950 - 2024)** used for the project,
 
 The five CSV files were imported into the Pandas DataFrame using the `pd.read_csv()` function.
 
-![Screenshot: Upload Info](screenshots/01_initial_exploration/pandas_read_csv.png)
+![Screenshot: Upload Info](screenshots/screenshot_2.png)
 
 The initial stages of the analysis were to explore the quality of the dataset and merge the DataFrames together into one large DataFrame which contained all of the information from each CSV.
 

@@ -73,7 +73,7 @@ Finally, a couple of columns were adjusted to be numeric values:
 
 The next step was to aggregate all the data until there was one row per driver_id 
 
-![Screenshot: Aggregating Data to one row per driver_id](screenshots/01_initial_exploration/screenshot4.png)
+![Screenshot: Aggregating Data to one row per driver_id](screenshots//screenshot_1.png)
 
 ### Standardizing Weight Units
 

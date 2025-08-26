@@ -179,7 +179,7 @@ plt.grid(True)
 
 ![Screenshot: Elbow Method](screenshots/screenshot_7.png)
 
-### Elbow Method
+### Silhoutte Score
 
 The silhouette method is another way to decide the best number of clusters in K-Means, but instead of just measuring “tightness” like WCSS, it also checks how well-separated the clusters are. Separation is about how far a cluster is from other clusters.For a specific point, we look at the nearest neighboring cluster and see how far away it is on average. If that other cluster is far from it's nearest other cluster, then it is well seperated and the boundary is clear. If that other cluster is close to another cluster then they might overlap or be poorly defined. This means silhouette is often better at catching situations where clusters are tight but still too close together. To find the best k value with the highest average silhouette score is usually the best. In real data, you might see a plateau or two close peaks
 
@@ -205,37 +205,79 @@ plt.xticks(k_range[1:])
 plt.grid(True)
 ```
 
-![Screenshot: Silhoutte Method](screenshots/screenshot_8.png)
+![Screenshot: Silhoutte Score](screenshots/screenshot_8.png)
 
-### Preparing Data for the Solver
+### Fitting the data to the clusters
 
-We prepare the data for the solver by converting weights and values to integers as required by OR-Tools. 
-The number of items in the subset is also determined.
+This step is taking the information from the last step by identifying how many clusters are needed and asking k-means to use 6 clusters. 
 
-```python
-weights = random_subset['weight_kg'].tolist()
-values = random_subset['price'].tolist()
+K means starts by randomly picking initial cluster centers (centeroids). Different random starting points can lead to slightly different clustering results so if you run this code twice without fixing the randomness you will get different cluser assignments. The random_state therefore sets the seed for python's random number generater (e.g. 42) the sequence of random numbers will always be the same. This meand the K Means will start with the same initial centeroids every time it is run so you get the same results every time.
 
-# Convert weights and values to integers (required by OR-Tools)
-weights = [int(w * 1000) for w in weights]  # Convert to grams (integer)
-values = [int(v * 100) for v in values]  # Convert to currency (integer)
-
-# Number of items
-num_items = len(random_subset)
-```
-
-### Solver Initialization and Solution
-
-We initialize the solver with the prepared data and solve the Knapsack Problem to find the selected items (1 for selected, 0 for not selected).
+The n_init section runs the entire k means algorithim the number of times you have specified (e.g. 10) - after all the runs finish, it picks the best run with the tightest clusters (lowest WCSS). If you run k means just once, you can risk getting suboptimal clusters - running it 10 times greatly increases your chances of finding the best cluster arrangement.
 
 ```python
-# Set the solver parameters
-solver.init(values, [weights], [capacity])
-solver.solve()
+# Fit KMeans with chosen k
+k = 6
+kmeans = KMeans(n_clusters=k, random_state=42, n_init=20)  # Added n_init for clarity
 
-# Get the selected items (1 for selected, 0 for not selected)
-selected_items = [solver.best_solution_contains(i) for i in range(num_items)]
+driver_summary_df['Cluster'] = kmeans.fit_predict(driver_features_df_cleaned)
+
+# Calculate the mean stats for each cluster
+cluster_summary = (
+    driver_summary_df
+    .groupby('Cluster')[['finish_rate','points_finish_perc','podium_finish_perc',
+                         'avg_positions_gained','win_perc']]
+    .mean()
+    .round(2)
+)
+
+perc_cols = ['finish_rate', 'points_finish_perc', 'podium_finish_perc', 'win_perc']
+
+# Convert to percentages
+cluster_summary[perc_cols] = cluster_summary[perc_cols] * 100
+
+# Make table print on one line
+pd.set_option('display.max_columns', None)
+pd.set_option('display.width', 1000)
+
+print(cluster_summary)
 ```
+![Screenshot: Cluster Results](screenshots/screenshot_9.png)
+
+### Naming Clusters and Adding Driver Name back in
+
+Giving names to the cluster labels to show them as more distinguishable clusters and then displaying the cluster name agaisnt each of the drivers to see where they fall.
+
+```python
+# Updated cluster labels
+cluster_labels = {
+    0: 'Elite Drivers',
+    1: 'Back-Markers',
+    2: 'Top Contendors',
+    3: 'Aggressive Risk Prone Drivers',
+    4: 'Consistent Midfielders',
+    5: 'Lower Midfield Fighters'
+}
+
+driver_summary_df['Driver Type'] = driver_summary_df['Cluster'].map(cluster_labels)
+
+print(cluster_summary)
+
+# Features to show
+stats_cols = [
+    'surname', 'Cluster', 'Driver Type',
+    'finish_rate','points_finish_perc','podium_finish_perc',
+    'avg_positions_gained', 'avg_finish_position', 'avg_grid_position',
+    'win_perc'
+]
+
+# Print full table of actual stats + cluster info
+pd.set_option('display.max_columns', None)
+pd.set_option('display.width', 1000)
+display(driver_summary_df[stats_cols].sort_values('Cluster'))
+```
+
+![Screenshot: Drivers attributed to each cluster](screenshots/screenshot_10.png)
 
 ### Results and Analysis
 
@@ -285,8 +327,5 @@ While the discrepancy is small enough for this project, it's essential to be awa
 
 ## References
 
-1. [Amazon Product Dataset 2020](https://www.kaggle.com/datasets/promptcloud/amazon-product-dataset-2020)
-2. [Google OR-Tools Documentation](https://developers.google.com/optimization/pack/knapsack)
-3. Medium Articles:
-   - [Exploring the Bin Packing Problem](https://medium.com/swlh/exploring-the-bin-packing-problem-f54a93ebdbe5)
-   - [The Knapsack Problem: A Guide to Solving One of the Classic Problems in Computer Science](https://levelup.gitconnected.com/the-knapsack-problem-a-guide-to-solving-one-of-the-classic-problems-in-computer-science-7b63b0851c89)
+1. [Formula 1 World Championships (1950-2024)](https://www.kaggle.com/datasets/rohanrao/formula-1-world-championship-1950-2020). 
+

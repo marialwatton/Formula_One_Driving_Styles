@@ -31,6 +31,10 @@ The five CSV files were imported into the Pandas DataFrame using the `pd.read_cs
 
 The initial stages of the analysis were to explore the quality of the dataset and merge the DataFrames together into one large DataFrame which contained all of the information from each CSV.
 
+Following this, each dataframe was clearly named so it was easier to merge the dataframes on the correct keys. 
+
+![Screenshot: Renaming DataFrames](screenshots/screenshot_14.png)
+
 ```python
 # Access the dataframes from the named_dataframes dictionary
 results_df = named_dataframes['results_df']
@@ -57,34 +61,35 @@ display(final_merged_df.head())
 
 ### Data Selection, Renaming and Formatting
 
-To focus on the relevant columns for create groups of Formula 1 Drivers, the following columns were selected:
+To focus on the relevant columns to create groups of Formula 1 Drivers, the following columns were selected:
 
-`selected_columns_df = final_merged_df[['raceId', 'year', 'date', 'name', 'driverId', 'driverRef', 'code', 'surname', 'forename', 'nationality', 'qualifyId', 'position_y', 'resultId', 'position_x', 'positionText', 'statusId', 'status', 'points']]`
+***`selected_columns_df = final_merged_df[['raceId', 'year', 'date', 'name', 'driverId', 'driverRef', 'code', 'surname', 'forename', 'nationality', 'qualifyId', 'position_y', 'resultId', 'position_x', 'positionText', 'statusId', 'status', 'points']]`***
 
-These columns were  then renamed as follows to improve clarity and consistencty of the data: 
+These columns were then renamed as follows to improve clarity and consistencty of the data: 
 
-`complete_df = selected_columns_df.rename(columns={'name': 'race_name', 'code': 'driver_code', 'position_y': 'grid_position', 'position_x': 'race_finish', 'positionText': 'race_finish_text'})`
+***`complete_df = selected_columns_df.rename(columns={'name': 'race_name', 'code': 'driver_code', 'position_y': 'grid_position', 'position_x': 'race_finish', 'positionText': 'race_finish_text'})`***
 
 Finally, a couple of columns were adjusted to be numeric values:
 
-`complete_df['race_finish_numeric'] = pd.to_numeric(complete_df['race_finish'], errors='coerce')`
+***`complete_df['race_finish_numeric'] = pd.to_numeric(complete_df['race_finish'], errors='coerce')`***
 
-`complete_df['positions_gained'] =  complete_df['grid_position'] - complete_df['race_finish_numeric']`
+***`complete_df['positions_gained'] =  complete_df['grid_position'] - complete_df['race_finish_numeric']`***
 
-### Grouping and adding Additional Metrics
+### Grouping and Adding Additional Metrics
 
-The next step was to aggregate all the data until there was one row per driver_id:
+The next step was to aggregate all the data until there was one row per driver_id, with columns being converted into a numeric format where necessary: 
 
-![Screenshot: Aggregating Data to one row per driver_id](screenshots//screenshot_1.png)
+![Screenshot: Aggregating Data](screenshots//screenshot_15.png)
 
 Following this, additional columns could be added which used the aggregated data from the previous step to create percentage performance for each driver on the following metrics:
 
+- **races_finished** - races_participated - dnf_count
 - **podium_finish_perc** - Podium_count/races_participated
 - **points_finish_perc** - points_finish_count/races_participated
 - **finish_rate** - races_finished/races_participated
 - **win_rate** - win_count/races_participated
 
-![Screenshot: Additional Columns added](screenshots//screenshot_3.png)
+![Screenshot: Additional Columns Added](screenshots//screenshot_3.png)
 
 ### Removing Drivers
 
@@ -98,7 +103,7 @@ driver_summary_df = driver_summary_df[driver_summary_df['races_participated'] > 
 
 ![Screenshot: Final Dataset](screenshots/screenshot_4.png)
 
-The resulting cleaned and standardized dataset could then be used for future processing, and contains the following columns: 
+The resulting cleaned and standardised dataset could then be used for future processing, and contains the following columns: 
 
 - **driver_id**
 - **driverRef**
@@ -112,7 +117,7 @@ The resulting cleaned and standardized dataset could then be used for future pro
 - **DNF_count**
 - **races_finished**
 - **avg_grid_position**
-- **avg_finihs_position**
+- **avg_finish_position**
 - **avg_positions_gained**
 - **podium_finish_perc**
 - **points_finish_perc**
@@ -121,7 +126,7 @@ The resulting cleaned and standardized dataset could then be used for future pro
 
 ## Start the K Means Clustering Process
 
-In this section, we walk through the steps of using K Means Clustering to group drivers into different driving styles. This involved selecting the number of clusters to use and visualising this data.
+In this section, we go through the steps of using K Means Clustering to group drivers into different driving styles. This involved selecting the number of clusters to use and visualising this data.
 
 ### Loading the Cleaned Dataset
 
@@ -139,23 +144,23 @@ This step prepares the data for clustering by selecting relevant features and se
 
 This code snippet handles potential missing values and scales the numerical features in the data, which are crucial steps before applying clustering algorithms.
 
-***print("Missing values before handling:") and print(driver_features_df.isnull().sum())***: These lines check for and print the number of missing values in each column of the driver_features_df DataFrame before any handling is done.This gives you an initial assessment of the data's completeness.
+***print("Missing values before handling:")*** and ***print(driver_features_df.isnull().sum())***: These lines check for and print the number of missing values in each column of the driver_features_df DataFrame before any handling is done to give a better idea of how complete the data is. 
 
 This then creates a new DataFrame called ***driver_features_df_cleaned*** by removing any rows from the original ***driver_features_df*** that contain at least one missing value. This is a simple method for handling NaNs, and it's often used before clustering because many clustering algorithms are sensitive to missing data.
 
-The code then is scaling numeric features so that they're on the same scale, which is especially useful for machine learning algorithms that are sensitive to differences in magnitude between features. This puts all features on equal footing, so no single feature unfairly dominates the clustering. Without this scaling, clusters might look elongated along the axis with larger values.
+The DNF Rate has to be inverted before being scaled so that the lower rates are the higher scores otherwise it impacts the results.
 
-After scaling, all features contribute equally to determining cluster membership, leading to more meaningful and balanced clusters. The DNF Rate has to be inverted before being scaled so that the lower rates are the higher scores otherwise it impacts the results.
+The code is then scaling numeric features so that they're on an equal footing, so no single feature unfairly dominates the clustering. Without this scaling, clusters might look elongated along the axis with larger values.
 
 ![Screenshot: Cleaned and Scaled DataSet](screenshots/screenshot_6.png)
 
 ### Elbow Method
 
-The next step is to us thee Elbow Method to help determine the optimal number of clusters (k). The elbow method is a way to help decide the optimal number of clusters k in K-Means clustering. To figure this out we create a range of integers from 1 to 10 (inclusive), which represents the different values of k (number of clusters) that will be tested.
+The next step is to us the Elbow Method to determine the optimal number of clusters (k). This stage ***k_range = range(1, 11)*** indicates the number of clusters that will be tested with ***for k in k_range: kmeans = KMeans(n_clusters=k, random_state=42, n_init=10)*** iterating through each stage.
 
-For each of these you check how tightly the points are grouped (WCSS score). It's a way to measure how close the points in a cluster are to their cluster's center (centroid - the average position of all points in that cluster). Square those distances (this punishes points that are far away more heavily). These are then added up and that's the sum of the squares for the cluser. Once you do this for all points - this makes the WCSS.
+The ***kmeans.fit(scaled_features_df)*** stage trains the model on the dataframe provided based on the features highighted earlier that we wanted to cluster on. Following this ***wcss.append(kmeans.inertia_)*** identifies how tightly the groups are clustered.
 
-Low WCSS → points are close together → clusters are compact. High WCSS → points are spread out → clusters are loose. As you add more clusters, the points get tighter — but after a certain point, adding more clusters doesn't help much - this makes the bend therefore looking like an elbow. The bend is usually the best number of clusters to choose.
+This is then plotted on the graph with the bend in the graph indicating the optimum number of clusters.
 
 ```python
 wcss = []
@@ -181,7 +186,7 @@ plt.grid(True)
 
 ### Silhoutte Score
 
-The silhouette method is another way to decide the best number of clusters in K-Means, but instead of just measuring “tightness” like WCSS, it also checks how well-separated the clusters are. Separation is about how far a cluster is from other clusters.For a specific point, we look at the nearest neighboring cluster and see how far away it is on average. If that other cluster is far from it's nearest other cluster, then it is well seperated and the boundary is clear. If that other cluster is close to another cluster then they might overlap or be poorly defined. This means silhouette is often better at catching situations where clusters are tight but still too close together. To find the best k value with the highest average silhouette score is usually the best. In real data, you might see a plateau or two close peaks
+As the Elbow Method did not clearly define the best numbr of clusters, the silhouette method was used to help determine this as it also checks how far a cluster is from other clusters.
 
 ```python
 wcss = []
@@ -207,13 +212,13 @@ plt.grid(True)
 
 ![Screenshot: Silhoutte Score](screenshots/screenshot_8.png)
 
-### Fitting the data to the clusters
+### Fitting the Data into Clusters
 
-This step is taking the information from the last step by identifying how many clusters are needed and asking k-means to use 6 clusters. 
+This step is taking the information from the last step by and uses k-means to use 6 clusters as this is the optimum number based on both the elbow method and the silhoutte score.
 
-K means starts by randomly picking initial cluster centers (centeroids). Different random starting points can lead to slightly different clustering results so if you run this code twice without fixing the randomness you will get different cluser assignments. The random_state therefore sets the seed for python's random number generater (e.g. 42) the sequence of random numbers will always be the same. This meand the K Means will start with the same initial centeroids every time it is run so you get the same results every time.
+***kmeans = KMeans(n_clusters=k, random_state=42, n_init=20)*** initialises the K-Means model with the chosen number of clusters, telling it to run 20 times and pick the best result. 
 
-The n_init section runs the entire k means algorithim the number of times you have specified (e.g. 10) - after all the runs finish, it picks the best run with the tightest clusters (lowest WCSS). If you run k means just once, you can risk getting suboptimal clusters - running it 10 times greatly increases your chances of finding the best cluster arrangement.
+***driver_summary_df['Cluster'] = kmeans.fit_predict(driver_features_df_cleaned):*** - This line is the most important as it trains the K Means model on the numerical metrics that we used earlier to group the drivers and then uses this training to assign a cluster to each of the drivers.
 
 ```python
 # Fit KMeans with chosen k
@@ -244,9 +249,9 @@ print(cluster_summary)
 ```
 ![Screenshot: Cluster Results](screenshots/screenshot_9.png)
 
-### Naming Clusters and Adding Driver Name back in
+### Naming Clusters
 
-Giving names to the cluster labels to show them as more distinguishable clusters and then displaying the cluster name agaisnt each of the drivers to see where they fall.
+Giving names to the cluster labels helps to show them as more distinguishable clusters and then displaying the cluster name agaisnt each of the drivers to see where they fall clearly shows each drivers performance style.
 
 ```python
 # Updated cluster labels
@@ -281,13 +286,15 @@ display(driver_summary_df[stats_cols].sort_values('Cluster'))
 
 ### Results and Analysis
 
-This code snippet generates a PCA (Principal Component Analysis) loadings plot, which helps you understand how the original features contribute to the principal components to understand which features are most influential in shaping the results.
+To understand the effectiveness of the results a PCA (Principal Component Analysis) loadings plot was generated which showed the how the features contribute to the clusters and which are the most influentual.
 
-Taking the square root helps scale the contributions properly so they reflect the actual influence.This gives you a final score for how much each feature contributes to PC1 and PC2. These can now be plotted on a graph.
+Taking the square root helps scale the contributions properly so they reflect the actual influence.This gives a final score for how much each feature contributes to PC1 and PC2. These can now be plotted on a graph.
 
-Features which are far from the origing 0.0 have a strong influence on the results and if two features are close toether they behave simlarily
+Features which are far from the origing 0.0 have a strong influence on the results and if two features are close together they behave simlarily
 
 ![Screenshot: Understanding Features of F1 Driver Performance](screenshots/screenshot_12.png)
+
+This logic was then applied to the clusters to see where a driver fell based on the two parameters to understand what was the most influential factor for each driver. 
 
 ![Screenshot: F1 Driver Clusters Charting](screenshots/screenshot_13.png)
 

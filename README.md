@@ -61,11 +61,12 @@ To focus on the relevant columns for create groups of Formula 1 Drivers, the fol
 
 These columns were  then renamed as follows to improve clarity and consistencty of the data: 
 
-`complete_df = selected_columns_df.rename(columns={'name': 'race_name','code': 'driver_code','position_y': 'grid_position','position_x': 'race_finish','positionText': 'race_finish_text'})`
+`complete_df = selected_columns_df.rename(columns={'name': 'race_name', 'code': 'driver_code', 'position_y': 'grid_position', 'position_x': 'race_finish', 'positionText': 'race_finish_text'})`
 
 Finally, a couple of columns were adjusted to be numeric values:
 
 `complete_df['race_finish_numeric'] = pd.to_numeric(complete_df['race_finish'], errors='coerce')`
+
 `complete_df['positions_gained'] =  complete_df['grid_position'] - complete_df['race_finish_numeric']`
 
 ### Handling Missing Values

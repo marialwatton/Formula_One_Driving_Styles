@@ -3,30 +3,58 @@
 ## Executive Summary
 
 This project explores the relationship between Formula One driving style and performance from the last 50 years. This is based on K Means Clustering of the driver’s performance and grouped drivers into one of six clusters:
-- Elite Drivers
-- Back-Markers
-- Top Contenders
-- Aggressive Risk Prone Drivers
-- Consistent Midfielder
-- Lower Midfield Fighters
-- 
-Identifying the best available silhouette score (0.39) and the lowest WCSS (265) from the data such as percentage of wins and average positions gained identified the 6 clusters. The ability to scale and replicate the results of the K Means algorithm proves the usefulness of the analysis for identifying drivers who need targeted coaching compared to those who are ahead in their field and the distinguishing differences between these types of drivers. 
 
-## Data Preprocessing
+- **Elite Drivers**
+- **Back-Markers**
+- **Top Contenders**
+- **Aggressive Risk Prone Drivers**
+- **Consistent Midfielder**
+- **Lower Midfield Fighters**
+  
+## Data Selection
 
-The dataset Formula 1 World Championship (1950 - 2024) used for the project, sourced from Kaggle, included 14 CSV files however this project only utilised 5 of these. ["Formula 1 World Championships (1950-2024)"](https://www.kaggle.com/datasets/rohanrao/formula-1-world-championship-1950-2020). 
+The dataset **Formula 1 World Championship (1950 - 2024)** used for the project, sourced from Kaggle, included 14 CSV files however this project only utilised 5 of these. ["Formula 1 World Championships (1950-2024)"](https://www.kaggle.com/datasets/rohanrao/formula-1-world-championship-1950-2020). 
+
+- ***drivers*** - 9 columns, 862 rows.
+- ***qualifying*** - 9 columns, 10,494 rows.
+- ***races*** - 18 columns, 1,125 rows.
+- ***results*** - 18 columns, 26,759 rows.
+- ***status*** - 2 columns, 139 rows.
 
 ### Loading and Initial Exploration
 
-We began by importing the CSV dataset into a Pandas DataFrame using the `pd.read_csv()` function. 
+The five CSV files were imported into the Pandas DataFrame using the `pd.read_csv()` function.
 
-The initial exploration of the dataset was then conducted to gain insights into its structure and contents.
+![Screenshot: Upload Info](screenshots/01_initial_exploration/pandas_read_csv.png)
 
-![Screenshot: DataFrame Info](screenshots/01_initial_exploration/screenshot1.png)
+The initial stages of the analysis were to explore the quality of the dataset and merge the DataFrames together into one large DataFrame which contained all of the information from each CSV.
+
+```python
+# Access the dataframes from the named_dataframes dictionary
+results_df = named_dataframes['results_df']
+status_df = named_dataframes['status_df']
+races_df = named_dataframes['races_df']
+drivers_df = named_dataframes['drivers_df']
+qualifying_df = named_dataframes['qualifying_df']
+
+# Perform the first merge: results with status
+merged_results_status = pd.merge(results_df, status_df, on='statusId', how='left')
+
+# Perform the second merge: the result of the first merge with drivers
+merged_results_driver = pd.merge(merged_results_status, drivers_df, on='driverId', how='left')
+
+# Perform the third merge: the result of the second merge with races
+merged_results_races = pd.merge(merged_results_driver, races_df, on='raceId', how='left')
+
+# Perform the fourth merge: the result of the third merge with qualifying
+final_merged_df = pd.merge(merged_results_races, qualifying_df, on=['raceId', 'driverId'], how='left')
+
+print("Merged dataframes:")
+display(final_merged_df.head())
 
 ### Data Selection and Renaming
 
-To focus on the relevant columns for the Knapsack Problem, we selected the 'Uniq Id' 'Shipping Weight' and 'Selling Price' columns.
+To focus on the relevant columns for create groups of Formula 1 Drivers, the following columns were selected:
 
 `bin_dataset = df[['Uniq Id','Shipping Weight','Selling Price']]`
 
